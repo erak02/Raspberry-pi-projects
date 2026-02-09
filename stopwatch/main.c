@@ -10,32 +10,25 @@
 
 #define LCD_ADDR 0x27
 
-/*komande LCD kontrolera*/
-#define LCD_CLEARDISPLAY 0x01 //brise sav prikaz displaya i vraca kursor na pocetak
-#define LCD_RETURNHOME 0x02 //postavlja kursor na pocetak bez brisanja displaya
-#define LCD_ENTRYMODESET 0x04 //kako se kursor pomera nakon upisa karaktera
-#define LCD_DISPLAYCONTROL 0x08 //ukljucivanje/iskljucivanje kursora, displaya i blinkanje kursora
-#define LCD_CURSORSHIFT 0x10 //pomeranje kursora ili celog prikaza levo i desno
-#define LCD_FUNCTIONSET 0x20 //definise broj linija, velicinu karaktera i rezim rada (4-bitni ili 8-bitni)
-#define LCD_SETCGRAMADDR 0x40 //kreiranje i koriscenje custom simbola
-#define LCD_SETDDRAMADDR 0x80 //pomera kursor na odredjenu poziciju na ekranu 
+#define LCD_CLEARDISPLAY 0x01 
+#define LCD_RETURNHOME 0x02 
+#define LCD_ENTRYMODESET 0x04 
+#define LCD_DISPLAYCONTROL 0x08 
+#define LCD_CURSORSHIFT 0x10 
+#define LCD_FUNCTIONSET 0x20 
+#define LCD_SETCGRAMADDR 0x40 
+#define LCD_SETDDRAMADDR 0x80 
 
-/*flags za funkciju (function set)*/
-#define LCD_5x10DOTS 0x04 //postavlja font na 5x10 tackica po karakteru
-#define LCD_2LINE 0x08 //postavlja LCD da koristi dve linije umesto jedne
+#define LCD_5x10DOTS 0x04 
+#define LCD_2LINE 0x08 
 
-/*flags za prikaz i kursor*/
-#define LCD_BLINKON 0x01 //blinkanje kursora 
-#define LCD_CURSORON 0x02 //prikazuje kursor na ekranu
-#define LCD_DISPLAYON 0x04 //ukljucuje prikaz na ekranu, bez ovoga, ekran je prazan
+#define LCD_BLINKON 0x01 
+#define LCD_CURSORON 0x02 
+#define LCD_DISPLAYON 0x04
 
-/*flags za rezim unosa*/
-#define LCD_ENTRYSHIFTINCREMENT 0x01 //kursor se pomera ulevo nakon unosa karaktera
-#define LCD_ENTRYLEFT 0x02 //postavlja smer pomeranja kursora na levo nakon unosa karaktera
+#define LCD_ENTRYSHIFTINCREMENT 0x01 
+#define LCD_ENTRYLEFT 0x02
 
-/*ako je bit LCD_BACKLIGHT 1, onda je backlight on*/
-/*lcd ne cita podatke automatski, gleda D4-D7 i tek kada LCD_ENABLE predje sa 1 na 0 on zakljuca podatke*/
-/*ako je LCD_RS 0, u pitanju je komanda (clear, cursor...), dok ako je LCD_RS 1 onda je ASCII karakter*/
 #define LCD_BACKLIGHT 0x08
 #define LCD_ENABLE 0x04
 #define LCD_RS 0x01
@@ -51,8 +44,6 @@ int current_lap=0;
 char count_string[32];
 int best_lap = 0;
 
-/*data je jedan bajt koji salje, svaki bit tog bajta postavlja pinove na odgovarajuci nivo
-koristi se blocking jer je display spor, CPU ceka dok se bajt stvarno ne posalje*/
 void i2c_write_byte(uint8_t data)
 {
     i2c_write_blocking(I2C_PORT, LCD_ADDR, &data, 1, false);
@@ -67,7 +58,6 @@ void lcd_pulse_enable(uint8_t data)
     sleep_us(500);
 }
 
-/*funkcija za slanje samo jednog nibblea*/
 void lcd_send_nibble(uint8_t nibble, uint8_t rs)
 {
     uint8_t data = 0;
@@ -83,18 +73,12 @@ void lcd_send_nibble(uint8_t nibble, uint8_t rs)
     lcd_pulse_enable(data);
 }
 
-/*LCD radi u 4-bitnom rezimu, ASCII/komanda ima 8 bita pa zbog toga moram da saljem  iz dva puta
-prvi put saljem prva 4 bita ASCII/komande i 4 kontrolna bita
-drugi put saljem preostala 4 bita ASCII/komande i 4 kontrolna bita*/
 void lcd_write_byte(uint8_t val, uint8_t rs)
 {
     lcd_send_nibble(val & 0xF0, rs);
-    /*shiftuje bitove za 4 mesta ulevo, bitovi koji ispadnu sa leve strane se odbacuju*/
     lcd_send_nibble((val<<4) & 0xF0, rs);
 }
 
-/*posalji 0x03 tri puta da resetujes LCD u 8-bitni mod
-posalji 0x02 da predjes u 4-bitni mod*/
 void lcd_init()
 {
     sleep_ms(50);
