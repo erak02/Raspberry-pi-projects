@@ -6,6 +6,7 @@ This repository contains a collection of my Raspberry Pi Pico projects written i
 
 **stopwatch**
   - Simple digital stopwatch
+
 **button_interrupt**
   - LED control using button and GPIO interrupt
 
