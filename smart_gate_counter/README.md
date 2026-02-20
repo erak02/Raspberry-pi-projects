@@ -1,136 +1,65 @@
-🎯 Project Idea & Logic
+Smart Gate Counter
 
-The main idea of the project is:
+This project implements a car counting system using a Raspberry Pi Pico, a PIR motion sensor, two LEDs, a push button, and a 16x2 I2C LCD display.
 
-Each time a car passes, the PIR sensor is triggered
+Features
 
-The car counter is incremented
+Counts each car passing by detecting PIR sensor triggers
 
-The total number of cars is displayed on the LCD
+Displays total number of cars on the LCD
 
-A red LED turns ON for 5 seconds, indicating that:
+Red LED turns ON for 5 seconds when a car passes, preventing multiple counts from the same vehicle
 
-the current car is still passing
+Green LED indicates the system is ready for the next car
 
-no new car should be counted during this period
+Reset button sets car counter back to 0 and updates the display immediately
 
-After 5 seconds:
+Uses GPIO interrupts for responsive detection and one shared ISR for both PIR and reset button
 
-the red LED turns OFF
+Uses one-shot hardware alarms (add_alarm_in_ms) to handle LED timing
 
-the green LED turns ON
+I2C communication to drive the LCD in 4-bit mode
 
-the system is ready to count the next car
+Hardware Setup
 
-This ensures reliable counting and prevents multiple triggers from a single vehicle.
-
-🔴🟢 LED Status Meaning
-LED	Meaning
-🟢 Green LED ON	System is ready to detect a new car
-🔴 Red LED ON	Car detected – counting locked for 5 seconds
-🧠 Key Embedded Concepts Used
-
-GPIO interrupts (IRQ)
-
-Shared ISR for multiple GPIO pins
-
-volatile variables for ISR ↔ main loop communication
-
-One-shot hardware alarms (add_alarm_in_ms)
-
-Alarm cancellation to prevent overlapping timers
-
-I2C communication
-
-16x2 LCD control in 4-bit mode
-
-Event-driven (interrupt-based) design
-
-🧰 Hardware Components
-
-Raspberry Pi Pico
+Raspberry Pi Pico microcontroller
 
 PIR motion sensor
 
-16x2 I2C LCD display (PCF8574)
+16x2 character LCD display with I2C interface (address 0x27)
 
-Green LED
+Green LED (GPIO 5)
 
-Red LED
+Red LED (GPIO 6)
 
-Push button (reset counter)
+Push button for reset (GPIO 4)
 
-Resistors (LED current limiting)
+I2C lines: SDA (GPIO 0), SCL (GPIO 1)
 
-🔌 Pin Configuration
-Component	GPIO Pin
-LCD SDA	GPIO 0
-LCD SCL	GPIO 1
-PIR Sensor	GPIO 3
-Reset Button	GPIO 4
-Green LED	GPIO 5
-Red LED	GPIO 6
-⏱️ Timing Logic
+Resistors for LED current limiting
 
-When a car is detected:
+Internal pull-up/down resistors enabled on buttons and sensor pins
 
-a 5-second alarm is started
+Software Details
 
-during this time, additional PIR triggers are ignored
+Written in C using the Raspberry Pi Pico SDK
 
-The alarm callback restores the system to the ready state
+LCD initialized and controlled in 4-bit mode using custom commands
 
-Only one alarm can be active at a time
+GPIO IRQ handler detects PIR rising edges and reset button falling edges
 
-This guarantees deterministic behavior and prevents race conditions.
+Car counter increment and LED timing handled via interrupts and one-shot alarms
 
-📟 LCD Output
+LCD is updated in the main loop only when a change occurs (screen_needs_update flag)
 
-The LCD displays:
+Only one alarm can be active at a time, ensuring deterministic LED timing
 
-Number of cars
-detected: X
+Notes
 
-Where X is the total number of detected vehicles.
+The red LED indicates a car is currently being counted (locked for 5 seconds)
 
-🔄 Reset Functionality
+The green LED indicates the system is ready to detect the next car
 
-Pressing the reset button:
+Timing and LED behavior depend on hardware connections and CPU load
 
-resets the car counter to 0
-
-updates the LCD immediately
-
-🧩 Code Structure Highlights
-
-ISR (gpio_irq_handler)
-
-Handles both PIR sensor and reset button
-
-Keeps logic minimal and non-blocking
-
-Alarm callback
-
-Handles LED timing
-
-Resets system state after 5 seconds
-
-Main loop
-
-Updates LCD only when needed (flag-based)
-
-🚀 Possible Improvements
-
-Debounce logic for PIR sensor
-
-Non-blocking LCD updates using a state machine
-
-EEPROM / Flash storage for persistent car count
-
-Second sensor for direction detection (IN / OUT)
-
-Power optimization using sleep modes
-
-📄 License
-
-This project is intended for educational and learning purposes.
+The project can be extended with features like direction detection, multiple sensors, or persistent storage for the car count
